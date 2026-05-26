@@ -57,13 +57,38 @@ search_query = st.sidebar.text_input("Search by movie title or keyword", placeho
 
 # 3. CATEGORY FILTER — original language dropdown
 st.sidebar.subheader("🌐 Category Filter")
-all_languages = sorted(df['original_language'].dropna().unique().tolist())
-selected_languages = st.sidebar.multiselect(
+LANGUAGE_NAMES = {
+    'af': 'Afrikaans', 'ar': 'Arabic', 'bn': 'Bengali', 'ca': 'Catalan',
+    'cn': 'Cantonese', 'cs': 'Czech', 'cy': 'Welsh', 'da': 'Danish',
+    'de': 'German', 'el': 'Greek', 'en': 'English', 'eo': 'Esperanto',
+    'es': 'Spanish', 'et': 'Estonian', 'eu': 'Basque', 'fa': 'Persian (Farsi)',
+    'fi': 'Finnish', 'fr': 'French', 'gl': 'Galician', 'gu': 'Gujarati',
+    'he': 'Hebrew', 'hi': 'Hindi', 'hr': 'Croatian', 'hu': 'Hungarian',
+    'hy': 'Armenian', 'id': 'Indonesian', 'is': 'Icelandic', 'it': 'Italian',
+    'ja': 'Japanese', 'ka': 'Georgian', 'kn': 'Kannada', 'ko': 'Korean',
+    'ku': 'Kurdish', 'lb': 'Luxembourgish', 'lt': 'Lithuanian', 'lv': 'Latvian',
+    'mk': 'Macedonian', 'ml': 'Malayalam', 'mn': 'Mongolian', 'mr': 'Marathi',
+    'ms': 'Malay', 'nb': 'Norwegian', 'nl': 'Dutch', 'no': 'Norwegian',
+    'pa': 'Punjabi', 'pl': 'Polish', 'ps': 'Pashto', 'pt': 'Portuguese',
+    'ro': 'Romanian', 'ru': 'Russian', 'sh': 'Serbo-Croatian', 'sk': 'Slovak',
+    'sl': 'Slovenian', 'sq': 'Albanian', 'sr': 'Serbian', 'sv': 'Swedish',
+    'sw': 'Swahili', 'ta': 'Tamil', 'te': 'Telugu', 'th': 'Thai',
+    'tl': 'Filipino', 'tr': 'Turkish', 'uk': 'Ukrainian', 'ur': 'Urdu',
+    'vi': 'Vietnamese', 'wo': 'Wolof', 'xx': 'Unknown', 'yo': 'Yoruba',
+    'zh': 'Chinese (Mandarin)', 'zu': 'Zulu',
+}
+all_lang_codes = sorted(df['original_language'].dropna().unique().tolist())
+lang_display_options = {
+    LANGUAGE_NAMES.get(code, code.upper()) + f" ({code})": code
+    for code in all_lang_codes
+}
+selected_lang_labels = st.sidebar.multiselect(
     "Filter by Original Language",
-    options=all_languages,
+    options=sorted(lang_display_options.keys()),
     default=[],
     help="Select one or more languages"
 )
+selected_languages = [lang_display_options[label] for label in selected_lang_labels]
 
 # 4. MULTI-SELECT FILTER — genres
 st.sidebar.subheader("🎭 Genre Multi-Select")
