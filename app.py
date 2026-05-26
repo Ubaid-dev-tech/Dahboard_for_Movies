@@ -52,8 +52,15 @@ start_ts = pd.Timestamp(start_date_input)
 end_ts   = pd.Timestamp(end_date_input)
 
 # 2. SEARCH / TEXT FILTER
-st.sidebar.subheader("🔎 Search / Text Filter")
-search_query = st.sidebar.text_input("Search by movie title or keyword", placeholder="e.g. Batman, love, space...")
+st.sidebar.subheader("🔎 Search Movie")
+all_movie_titles = sorted(df['title'].dropna().unique().tolist())
+selected_movie = st.sidebar.multiselect(
+    "Search & Select Movies",
+    options=all_movie_titles,
+    default=[],
+    placeholder="Type to search movies...",
+    help="Type a few letters to find and select movies"
+)
 
 # 3. CATEGORY FILTER — original language dropdown
 st.sidebar.subheader("🌐 Category Filter")
@@ -163,19 +170,16 @@ if selected_genres:
 if selected_languages:
     df2 = df2[df2['original_language'].isin(selected_languages)]
 
-# Search / text filter — matches title OR keywords
-if search_query.strip():
-    q = search_query.strip().lower()
-    title_mask = df2['title'].str.lower().str.contains(q, na=False)
-    kw_mask = df2['keywords_list'].apply(lambda kws: any(q in kw.lower() for kw in kws))
-    df2 = df2[title_mask | kw_mask]
+# Search / movie filter — filter by selected movie titles
+if selected_movie:
+    df2 = df2[df2['title'].isin(selected_movie)]
 
 # ─────────────────────────────────────────────
 # ACTIVE FILTERS SUMMARY BADGE
 # ─────────────────────────────────────────────
 active_filters = []
-if search_query.strip():
-    active_filters.append(f"🔎 \"{search_query.strip()}\"")
+if selected_movie:
+    active_filters.append(f"🔎 {', '.join(selected_movie)}")
 if selected_languages:
     active_filters.append(f"🌐 {', '.join(selected_languages)}")
 if selected_genres:
@@ -191,6 +195,26 @@ if active_filters:
     st.info("**Active Filters:** " + " | ".join(active_filters) + f"  →  **{len(df2):,} movies**")
 else:
     st.success(f"No filters active — showing all **{len(df2):,} movies**")
+
+# ─────────────────────────────────────────────
+# SEARCH RESULTS PANEL — shown only when searching
+# ─────────────────────────────────────────────
+if selected_movie:
+    label = ', '.join(selected_movie)
+    st.subheader(f'🔎 Search Results for: "{label}"')
+    if df2.empty:
+        st.warning(f'No movies found matching "{label}".')
+    else:
+        st.success(f'Found **{len(df2)}** movie(s) matching "{label}"')
+        display_cols = ['title', 'vote_average', 'release_year', 'revenue', 'budget',
+                        'popularity', 'runtime', 'original_language']
+        display_cols = [c for c in display_cols if c in df2.columns]
+        search_display = df2[display_cols].copy()
+        search_display.columns = [c.replace('_', ' ').title() for c in search_display.columns]
+        search_display['Revenue'] = (df2['revenue'] / 1e6).round(1).astype(str) + 'M'
+        search_display['Budget']  = (df2['budget']  / 1e6).round(1).astype(str) + 'M'
+        st.dataframe(search_display.reset_index(drop=True), use_container_width=True)
+    st.divider()
 
 # ─────────────────────────────────────────────
 # KPIs
